@@ -40,27 +40,46 @@ const generateUserId = () => {
 
 // Get or create user ID
 const getUserId = () => {
-  if (typeof window !== 'undefined') {
-    let userId = localStorage.getItem('jaifer_user_id');
-    if (!userId) {
-      userId = generateUserId();
-      localStorage.setItem('jaifer_user_id', userId);
+  try {
+    if (typeof window !== 'undefined') {
+      let userId = localStorage.getItem('jaifer_user_id');
+      if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('jaifer_user_id', userId);
+      }
+      return userId;
     }
-    return userId;
+    return generateUserId(); // Fallback for SSR
+  } catch (error) {
+    console.error('Error getting user ID:', error);
+    return generateUserId(); // Fallback on error
   }
-  return generateUserId(); // Fallback for SSR
 };
 
 export default function StudyAssistant() {
-  const [userId] = useState(() => getUserId());
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'assistant',
-      content: '🌟 مرحباً بك في مساعد جعفر الذكي!\n\nأنا هنا لمساعدتك في رحلتك الدراسية للصف العاشر. يمكنني مساعدتك في:\n\n✨ شرح المفاهيم الصعبة\n📚 حل المسائل والواجبات\n🎯 التحضير للامتحانات\n🔗 العثور على مصادر تعليمية\n\n---\n\n🌟 Welcome to Jaifer AI Assistant!\n\nI\'m here to help you excel in Grade 10. I can assist you with:\n\n✨ Explaining complex concepts\n📚 Solving problems and assignments  \n🎯 Exam preparation\n🔗 Finding educational resources\n\nWhat would you like to explore today?',
-      timestamp: new Date()
+  const [userId] = useState(() => {
+    try {
+      return getUserId();
+    } catch (error) {
+      console.error('Error initializing user ID:', error);
+      return generateUserId();
     }
-  ]);
+  });
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      return [
+        {
+          id: '1',
+          type: 'assistant',
+          content: '🌟 مرحباً بك في مساعد جعفر الذكي!\n\nأنا هنا لمساعدتك في رحلتك الدراسية للصف العاشر. يمكنني مساعدتك في:\n\n✨ شرح المفاهيم الصعبة\n📚 حل المسائل والواجبات\n🎯 التحضير للامتحانات\n🔗 العثور على مصادر تعليمية\n\n---\n\n🌟 Welcome to Jaifer AI Assistant!\n\nI\'m here to help you excel in Grade 10. I can assist you with:\n\n✨ Explaining complex concepts\n📚 Solving problems and assignments  \n🎯 Exam preparation\n🔗 Finding educational resources\n\nWhat would you like to explore today?',
+          timestamp: new Date()
+        }
+      ];
+    } catch (error) {
+      console.error('Error initializing messages:', error);
+      return [];
+    }
+  });
   const [inputValue, setInputValue] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -124,7 +143,9 @@ export default function StudyAssistant() {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages && messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // Enhanced AI intelligence with context awareness
@@ -144,9 +165,10 @@ export default function StudyAssistant() {
       `Weather in ${weather.city}: ${weather.temperature}°C, ${weather.condition}, Humidity: ${weather.humidity}%` :
       '';
 
-    const recentMessages = messages.slice(-3).map(msg => 
-      `${msg.type}: ${msg.content.slice(0, 100)}...`
-    ).join('\n');
+    const recentMessages = messages && messages.length > 0 ? 
+      messages.slice(-3).map(msg => 
+        `${msg.type}: ${msg.content ? msg.content.slice(0, 100) : ''}...`
+      ).join('\n') : '';
 
     return {
       currentTime: omanTime,
@@ -158,7 +180,7 @@ export default function StudyAssistant() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue || !inputValue.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -167,7 +189,7 @@ export default function StudyAssistant() {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => prev ? [...prev, userMessage] : [userMessage]);
     setInputValue('');
     setIsLoading(true);
     setIsTyping(true);
@@ -181,7 +203,7 @@ export default function StudyAssistant() {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, streamingMessage]);
+    setMessages(prev => prev ? [...prev, streamingMessage] : [streamingMessage]);
     setIsTyping(false);
 
     try {
@@ -236,11 +258,11 @@ export default function StudyAssistant() {
                     accumulatedContent += data.content;
                     
                     // Update the streaming message
-                    setMessages(prev => prev.map(msg => 
+                    setMessages(prev => prev ? prev.map(msg => 
                       msg.id === assistantMessageId 
                         ? { ...msg, content: accumulatedContent }
                         : msg
-                    ));
+                    ) : []);
                   }
                   
                   if (data.done) {
@@ -268,30 +290,30 @@ export default function StudyAssistant() {
             console.log('Response as text:', textContent);
             content = textContent || 'عذراً، لم أتمكن من معالجة طلبك. يرجى المحاولة مرة أخرى.';
           }
-          setMessages(prev => prev.map(msg => 
+          setMessages(prev => prev ? prev.map(msg => 
             msg.id === assistantMessageId 
               ? { ...msg, content: content }
               : msg
-          ));
+          ) : []);
         } catch (error) {
           console.error('Error handling response:', error);
           const errorContent = 'عذراً، حدث خطأ في الاتصال. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.\n\nSorry, there was a connection error. Please check your internet connection and try again.';
-          setMessages(prev => prev.map(msg => 
+          setMessages(prev => prev ? prev.map(msg => 
             msg.id === assistantMessageId 
               ? { ...msg, content: errorContent }
               : msg
-          ));
+          ) : []);
         }
       }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorContent = 'عذراً، حدث خطأ في الاتصال. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.\n\nSorry, there was a connection error. Please check your internet connection and try again.';
       
-      setMessages(prev => prev.map(msg => 
+      setMessages(prev => prev ? prev.map(msg => 
         msg.id === assistantMessageId 
           ? { ...msg, content: errorContent }
           : msg
-      ));
+      ) : []);
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
@@ -315,6 +337,8 @@ export default function StudyAssistant() {
   };
 
   const renderMessageContent = (content: string) => {
+    if (!content) return null;
+    
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
     const parts = content.split(youtubeRegex);
     
@@ -331,9 +355,11 @@ export default function StudyAssistant() {
         }
       } else {
         // YouTube video ID
-        elements.push(
-          <YouTubeCard key={i} videoId={parts[i]} />
-        );
+        if (parts[i]) {
+          elements.push(
+            <YouTubeCard key={i} videoId={parts[i]} />
+          );
+        }
       }
     }
     
@@ -372,7 +398,7 @@ export default function StudyAssistant() {
           >
             <h1 className="text-sm font-semibold text-white drop-shadow-sm bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Jaifer AI Assistant</h1>
             <p className="text-xs text-white/90 drop-shadow-sm font-medium">Grade 10 Study Helper</p>
-            <p className="text-xs text-white/60 mt-1 font-mono">ID: {userId.slice(-8)}</p>
+            <p className="text-xs text-white/60 mt-1 font-mono">ID: {userId ? userId.slice(-8) : 'unknown'}</p>
           </motion.div>
           
           {/* Enhanced Time and Weather Info */}
@@ -439,7 +465,8 @@ export default function StudyAssistant() {
       {/* Enhanced Chat Messages Container */}
       <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-transparent via-black/5 to-transparent">
         <AnimatePresence mode="popLayout">
-          {messages.map((message) => (
+          {messages && messages.map((message) => (
+            message && (
             <motion.div
               key={message.id}
               initial={{ 
@@ -487,8 +514,8 @@ export default function StudyAssistant() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="leading-relaxed text-white">
-                    {renderMessageContent(message.content)}
-                    {isStreaming && message.content === '' && message.type === 'assistant' && (
+                    {message.content && renderMessageContent(message.content)}
+                    {isStreaming && (!message.content || message.content === '') && message.type === 'assistant' && (
                       <div className="loading-dots">
                         <span></span>
                         <span></span>
@@ -515,6 +542,7 @@ export default function StudyAssistant() {
                 </motion.div>
               </motion.div>
             </motion.div>
+            )
           ))}
         </AnimatePresence>
 
