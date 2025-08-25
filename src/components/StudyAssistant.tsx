@@ -103,42 +103,74 @@ export default function StudyAssistant() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch weather data for Oman using WeatherAPI.com
+  // Fetch weather data based on user's location
   useEffect(() => {
-    const fetchWeather = async () => {
+    const fetchWeather = async (latitude?: number, longitude?: number, locationName?: string) => {
       try {
-        const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=9b9f2a541a83438898d03333250707&q=muscat`);
+        let query = 'muscat'; // Default fallback
+        
+        if (latitude && longitude) {
+          query = `${latitude},${longitude}`;
+        } else if (locationName) {
+          query = locationName;
+        }
+
+        const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=9b9f2a541a83438898d03333250707&q=${encodeURIComponent(query)}`);
         if (response.ok) {
           const data = await response.json();
           setWeather({
             temperature: Math.round(data.current?.temp_c || 28),
             condition: data.current?.condition?.text || 'Clear',
             humidity: data.current?.humidity || 65,
-            city: data.location?.name || 'Muscat'
+            city: data.location?.name || 'Unknown Location'
           });
         } else {
-          // Fallback weather data for Oman
+          // Fallback weather data
           setWeather({
             temperature: 28,
             condition: 'Clear',
             humidity: 65,
-            city: 'Muscat'
+            city: 'Default Location'
           });
         }
       } catch {
-        // Fallback weather data for Oman
+        // Fallback weather data
         setWeather({
           temperature: 28,
           condition: 'Clear',
           humidity: 65,
-          city: 'Muscat'
+          city: 'Default Location'
         });
       }
     };
 
-    fetchWeather();
+    const getUserLocationAndFetchWeather = () => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            fetchWeather(latitude, longitude);
+          },
+          (error) => {
+            console.warn('Geolocation error:', error.message);
+            // Try to get location from IP or use default
+            fetchWeather();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // Cache for 5 minutes
+          }
+        );
+      } else {
+        console.warn('Geolocation not supported');
+        fetchWeather();
+      }
+    };
+
+    getUserLocationAndFetchWeather();
     // Refresh weather every 30 minutes
-    const weatherTimer = setInterval(fetchWeather, 30 * 60 * 1000);
+    const weatherTimer = setInterval(getUserLocationAndFetchWeather, 30 * 60 * 1000);
     return () => clearInterval(weatherTimer);
   }, []);
 
