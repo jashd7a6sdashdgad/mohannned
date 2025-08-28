@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Paperclip, Loader2, Brain, Clock, CloudSun } from 'lucide-react';
+import { Send, Paperclip, Loader2, Brain, Clock, CloudSun, BarChart3, BookOpen } from 'lucide-react';
 import YouTubeCard from './YouTubeCard';
 import FileUpload from './FileUpload';
+import StudyStatistics from './StudyStatistics';
 
 interface Message {
   id: string;
@@ -86,6 +87,7 @@ export default function StudyAssistant() {
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showStudyStats, setShowStudyStats] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -363,6 +365,10 @@ export default function StudyAssistant() {
     setShowFileUpload(true);
   };
 
+  const handleShowStats = () => {
+    setShowStudyStats(true);
+  };
+
   const handleFileSelect = (file: File) => {
     console.log('File selected:', file.name);
     // TODO: Process uploaded file and add to message
@@ -440,6 +446,16 @@ export default function StudyAssistant() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
           >
+            {/* Study Statistics Button */}
+            <motion.button
+              onClick={handleShowStats}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-5 py-3 shadow-[0_4px_12px_rgba(168,85,247,0.2)] border border-purple-300/30 hover:shadow-[0_6px_16px_rgba(168,85,247,0.3)] transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <BarChart3 className="w-4 h-4 text-purple-300" />
+              <span className="font-medium text-sm text-white">Study Stats</span>
+            </motion.button>
             <motion.div 
               className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-5 py-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)] border border-white/20 hover:bg-white/15"
               whileHover={{ scale: 1.05 }}
@@ -475,6 +491,17 @@ export default function StudyAssistant() {
                 <span className="font-medium text-sm">{weather.temperature}°C {weather.city}</span>
               </motion.div>
             )}
+            
+            {/* Quick Stats Preview */}
+            <motion.div 
+              className="flex items-center gap-3 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 backdrop-blur-sm rounded-full px-5 py-3 shadow-[0_4px_12px_rgba(16,185,129,0.2)] border border-emerald-300/30 hover:shadow-[0_6px_16px_rgba(16,185,129,0.3)] cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              onClick={handleShowStats}
+              transition={{ duration: 0.2 }}
+            >
+              <BookOpen className="w-4 h-4 text-emerald-300" />
+              <span className="font-medium text-sm">View Progress</span>
+            </motion.div>
           </motion.div>
         </motion.div>
         
@@ -726,6 +753,13 @@ export default function StudyAssistant() {
         isOpen={showFileUpload}
         onClose={() => setShowFileUpload(false)}
         onFileSelect={handleFileSelect}
+      />
+      
+      {/* Study Statistics Modal */}
+      <StudyStatistics
+        isOpen={showStudyStats}
+        onClose={() => setShowStudyStats(false)}
+        selectedCourse={selectedCourse}
       />
     </div>
   );
