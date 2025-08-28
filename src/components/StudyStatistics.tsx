@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Clock, Calendar, BarChart3, Target, TrendingUp, BookOpen } from 'lucide-react';
+import { Play, Pause, Clock, Calendar, BarChart3, TrendingUp, BookOpen } from 'lucide-react';
 
 interface StudySession {
   id: string;
@@ -25,9 +25,11 @@ interface StudyStatisticsProps {
   isOpen: boolean;
   onClose: () => void;
   selectedCourse: string;
+  autoSpeak: boolean;
+  onToggleAutoSpeak: (enabled: boolean) => void;
 }
 
-export default function StudyStatistics({ isOpen, onClose, selectedCourse }: StudyStatisticsProps) {
+export default function StudyStatistics({ isOpen, onClose, selectedCourse, autoSpeak, onToggleAutoSpeak }: StudyStatisticsProps) {
   const [stats, setStats] = useState<StudyStats>({
     totalTime: 0,
     todayTime: 0,
@@ -369,11 +371,64 @@ export default function StudyStatistics({ isOpen, onClose, selectedCourse }: Stu
                   </div>
                 </motion.div>
 
-                {/* Reset Button */}
+                {/* Voice Settings */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">Voice Settings</h4>
+                      <p className="text-white/60 text-sm">Configure voice features</p>
+                    </div>
+                    <button
+                      onClick={() => onToggleAutoSpeak(!autoSpeak)}
+                      className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                        autoSpeak
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
+                          : 'bg-white/20 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      {autoSpeak ? 'Auto-Speak ON' : 'Auto-Speak OFF'}
+                    </button>
+                  </div>
+                </motion.div>
+
+                {/* IQ Test Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.65 }}
+                  className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 backdrop-blur-sm border border-indigo-300/30 rounded-xl p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">Cognitive Assessment</h4>
+                      <p className="text-white/60 text-sm">Test your intellectual abilities</p>
+                    </div>
+                    <a
+                      href="https://iqtestfree.io/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                    >
+                      Take IQ Test
+                    </a>
+                  </div>
+                  <div className="mt-3 text-xs text-white/70">
+                    <p>• 30 questions in 20 minutes</p>
+                    <p>• Scientifically validated assessment</p>
+                    <p>• Free results with detailed analysis</p>
+                  </div>
+                </motion.div>
+
+                {/* Reset Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
                   className="text-center"
                 >
                   <button

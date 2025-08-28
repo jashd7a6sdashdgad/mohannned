@@ -2,10 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Paperclip, Loader2, Brain, Clock, CloudSun, BarChart3, BookOpen } from 'lucide-react';
+import { Send, Paperclip, Loader2, Brain, Clock, CloudSun, BarChart3, BookOpen, Mic } from 'lucide-react';
 import YouTubeCard from './YouTubeCard';
 import FileUpload from './FileUpload';
 import StudyStatistics from './StudyStatistics';
+import VoiceFeatures from './VoiceFeatures';
 
 interface Message {
   id: string;
@@ -72,7 +73,7 @@ export default function StudyAssistant() {
         {
           id: '1',
           type: 'assistant',
-          content: '🌟 مرحباً بك في مساعد جعفر الذكي!\n\nأنا هنا لمساعدتك في رحلتك الدراسية للصف العاشر. يمكنني مساعدتك في:\n\n✨ شرح المفاهيم الصعبة\n📚 حل المسائل والواجبات\n🎯 التحضير للامتحانات\n🔗 العثور على مصادر تعليمية\n\n---\n\n🌟 Welcome to Jaifer AI Assistant!\n\nI\'m here to help you excel in Grade 10. I can assist you with:\n\n✨ Explaining complex concepts\n📚 Solving problems and assignments  \n🎯 Exam preparation\n🔗 Finding educational resources\n\nWhat would you like to explore today?',
+          content: '🌟 مرحباً بك في مساعد جعفر الذكي!\n\nأنا هنا لمساعدتك في رحلتك الدراسية للصف العاشر. يمكنني مساعدتك في:\n\n✨ شرح المفاهيم الصعبة\n📚 حل المسائل والواجبات\n🎯 التحضير للامتحانات\n🔗 العثور على مصادر تعليمية\n\n---\n\n🌟 Welcome to Jaifer AI Assistant!\n\nI\'m here to help you excel in Grade 10. I can assist you with:\n\n✨ Explaining complex concepts\n📚 Solving problems and assignments  \n🎯 Exam preparation\n🔗 Finding educational resources\n\n🎤 Voice Commands: Click the Voice button to speak your questions!\n🧠 Cognitive Assessment: Take an IQ test to measure your intellectual abilities!\n\nWhat would you like to explore today?',
           timestamp: new Date()
         }
       ];
@@ -90,6 +91,9 @@ export default function StudyAssistant() {
   const [showStudyStats, setShowStudyStats] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -227,6 +231,7 @@ export default function StudyAssistant() {
     setInputValue('');
     setIsLoading(true);
     setIsTyping(true);
+    setIsProcessing(true);
 
     // Create assistant message for streaming
     const assistantMessageId = (Date.now() + 1).toString();
@@ -297,6 +302,17 @@ export default function StudyAssistant() {
                         ? { ...msg, content: accumulatedContent }
                         : msg
                     ) : []);
+                    
+                    // Auto-speak AI response if enabled
+                    if (autoSpeak && accumulatedContent) {
+                      setTimeout(() => {
+                        const utterance = new SpeechSynthesisUtterance(accumulatedContent);
+                        utterance.rate = 0.9;
+                        utterance.pitch = 1.0;
+                        utterance.volume = 0.8;
+                        window.speechSynthesis.speak(utterance);
+                      }, 1000); // Small delay to ensure message is displayed first
+                    }
                   }
                   
                   if (data.done) {
@@ -329,6 +345,17 @@ export default function StudyAssistant() {
               ? { ...msg, content: content }
               : msg
           ) : []);
+          
+          // Auto-speak AI response if enabled
+          if (autoSpeak && content) {
+            setTimeout(() => {
+              const utterance = new SpeechSynthesisUtterance(content);
+              utterance.rate = 0.9;
+              utterance.pitch = 1.0;
+              utterance.volume = 0.8;
+              window.speechSynthesis.speak(utterance);
+            }, 1000); // Small delay to ensure message is displayed first
+          }
         } catch (error) {
           console.error('Error handling response:', error);
           const errorContent = 'عذراً، حدث خطأ في الاتصال. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.\n\nSorry, there was a connection error. Please check your internet connection and try again.';
@@ -337,6 +364,17 @@ export default function StudyAssistant() {
               ? { ...msg, content: errorContent }
               : msg
           ) : []);
+          
+          // Auto-speak error message if enabled
+          if (autoSpeak && errorContent) {
+            setTimeout(() => {
+              const utterance = new SpeechSynthesisUtterance(errorContent);
+              utterance.rate = 0.9;
+              utterance.pitch = 1.0;
+              utterance.volume = 0.8;
+              window.speechSynthesis.speak(utterance);
+            }, 1000);
+          }
         }
       }
     } catch (error) {
@@ -348,9 +386,21 @@ export default function StudyAssistant() {
           ? { ...msg, content: errorContent }
           : msg
       ) : []);
+      
+      // Auto-speak error message if enabled
+      if (autoSpeak && errorContent) {
+        setTimeout(() => {
+          const utterance = new SpeechSynthesisUtterance(errorContent);
+          utterance.rate = 0.9;
+          utterance.pitch = 1.0;
+          utterance.volume = 0.8;
+          window.speechSynthesis.speak(utterance);
+        }, 1000);
+      }
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
+      setIsProcessing(false);
     }
   };
 
@@ -367,6 +417,22 @@ export default function StudyAssistant() {
 
   const handleShowStats = () => {
     setShowStudyStats(true);
+  };
+
+  const handleVoiceInput = (text: string) => {
+    setInputValue(text);
+    // Automatically send the message after voice input
+    setTimeout(() => {
+      handleSendMessage();
+    }, 500);
+  };
+
+  const handleToggleListening = (listening: boolean) => {
+    setIsListening(listening);
+  };
+
+  const handleToggleAutoSpeak = (enabled: boolean) => {
+    setAutoSpeak(enabled);
   };
 
   const handleFileSelect = (file: File) => {
@@ -502,6 +568,33 @@ export default function StudyAssistant() {
               <BookOpen className="w-4 h-4 text-emerald-300" />
               <span className="font-medium text-sm">View Progress</span>
             </motion.div>
+            
+            {/* Voice Features Indicator */}
+            <motion.div 
+              className="flex items-center gap-3 bg-gradient-to-r from-pink-500/20 to-rose-500/20 backdrop-blur-sm rounded-full px-5 py-3 shadow-[0_4px_12px_rgba(236,72,153,0.2)] border border-pink-300/30"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
+              <Mic className="w-4 h-4 text-pink-300" />
+              <span className="font-medium text-sm text-white">Voice Enabled</span>
+            </motion.div>
+            
+            {/* IQ Test Link */}
+            <motion.a
+              href="https://iqtestfree.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 backdrop-blur-sm rounded-full px-5 py-3 shadow-[0_4px_12px_rgba(99,102,241,0.2)] border border-indigo-300/30 hover:shadow-[0_6px_16px_rgba(99,102,241,0.3)] cursor-pointer transition-all duration-300"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Brain className="w-4 h-4 text-indigo-300" />
+              <span className="font-medium text-sm text-white">Take IQ Test</span>
+            </motion.a>
           </motion.div>
         </motion.div>
         
@@ -519,6 +612,25 @@ export default function StudyAssistant() {
             <option key={course} value={course} className="text-white bg-[#4a4a5d]">📚 {course}</option>
           ))}
         </motion.select>
+        
+        {/* IQ Test Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.5 }}
+          className="mt-4 text-center"
+        >
+          <p className="text-xs text-white/60">
+            🧠 <a 
+              href="https://iqtestfree.io/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-indigo-300 hover:text-indigo-200 underline transition-colors duration-300"
+            >
+              Take a free IQ test
+            </a> to assess your cognitive abilities and track your intellectual growth alongside your study progress!
+          </p>
+        </motion.div>
       </div>
 
       {/* Enhanced Chat Messages Container */}
@@ -673,6 +785,19 @@ export default function StudyAssistant() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9, duration: 0.6 }}
       >
+        {/* Voice Features */}
+        <div className="mb-4">
+          <VoiceFeatures
+            onVoiceInput={handleVoiceInput}
+            onToggleListening={handleToggleListening}
+            isListening={isListening}
+            isProcessing={isProcessing}
+            currentMessage={messages.length > 0 ? messages[messages.length - 1]?.content : undefined}
+            autoSpeak={autoSpeak}
+            onToggleAutoSpeak={handleToggleAutoSpeak}
+          />
+        </div>
+        
         <div className="flex gap-3 items-end">
           <motion.button
             onClick={handleFileAttach}
@@ -745,7 +870,17 @@ export default function StudyAssistant() {
           animate={{ opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 3, repeat: Infinity }}
         >
-          ✨ Press Shift+Enter for new line • AI-powered responses
+          ✨ Press Shift+Enter for new line • 🎤 Click Voice button to speak • AI-powered responses
+        </motion.div>
+        
+        {/* Voice Commands Help */}
+        <motion.div 
+          className="text-xs text-white/40 mt-1 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
+        >
+          💡 Voice Tips: Speak clearly • Use &ldquo;explain&rdquo; or &ldquo;help me with&rdquo; • Ask specific questions
         </motion.div>
       </motion.div>
       {/* File Upload Modal */}
@@ -760,6 +895,8 @@ export default function StudyAssistant() {
         isOpen={showStudyStats}
         onClose={() => setShowStudyStats(false)}
         selectedCourse={selectedCourse}
+        autoSpeak={autoSpeak}
+        onToggleAutoSpeak={handleToggleAutoSpeak}
       />
     </div>
   );
