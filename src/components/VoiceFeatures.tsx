@@ -206,28 +206,16 @@ export default function VoiceFeatures({
 
   return (
     <div className="flex items-center gap-3">
-      {/* Voice Input Button */}
-      <motion.button
-        onClick={toggleListening}
-        disabled={isProcessing}
-        className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
-          isListening
-            ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg'
-            : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-        whileHover={{ scale: isListening ? 1.05 : 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        animate={{
-          scale: isListening ? [1, 1.1, 1] : 1,
-          boxShadow: isListening 
-            ? "0 0 20px rgba(239, 68, 68, 0.5)" 
-            : "0 4px 12px rgba(59, 130, 246, 0.3)"
-        }}
-        transition={{
-          scale: { duration: 0.5, repeat: isListening ? Infinity : 0 },
-          boxShadow: { duration: 0.3 }
-        }}
-      >
+             {/* Voice Input Button */}
+       <motion.button
+         onClick={toggleListening}
+         disabled={isProcessing}
+         className="p-3 transition-all duration-300 flex items-center justify-center gap-2 text-white disabled:opacity-50 disabled:cursor-not-allowed bg-transparent border-none shadow-none"
+         style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}
+         whileHover={{ scale: isListening ? 1.05 : 1.05 }}
+         whileTap={{ scale: 0.95 }}
+         transition={{ duration: 0.3 }}
+       >
         {isListening ? (
           <>
             <MicOff className="w-5 h-5" />
@@ -241,44 +229,29 @@ export default function VoiceFeatures({
         )}
       </motion.button>
 
-      {/* Auto-Speak Toggle */}
-      <motion.button
-        onClick={() => onToggleAutoSpeak(!autoSpeak)}
-        className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
-          autoSpeak
-            ? 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white shadow-lg'
-            : 'bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/20'
-        }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
-      >
+             {/* Auto-Speak Toggle */}
+       <motion.button
+         onClick={() => onToggleAutoSpeak(!autoSpeak)}
+         className="p-3 transition-all duration-300 flex items-center justify-center gap-2 text-white bg-transparent border-none shadow-none"
+         style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}
+         whileHover={{ scale: 1.05 }}
+         whileTap={{ scale: 0.95 }}
+         title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
+       >
         <Volume2 className={`w-5 h-5 ${autoSpeak ? 'text-white' : 'text-white/70'}`} />
         <span className="text-sm font-medium">{autoSpeak ? 'Auto' : 'Auto'}</span>
       </motion.button>
 
-      {/* Voice Output Button */}
-      {currentMessage && (
-        <motion.button
-          onClick={toggleSpeaking}
-          className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
-            isSpeaking
-              ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
-              : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl'
-          }`}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          animate={{
-            scale: isSpeaking ? [1, 1.05, 1] : 1,
-            boxShadow: isSpeaking 
-              ? "0 0 20px rgba(34, 197, 94, 0.5)" 
-              : "0 4px 12px rgba(34, 197, 94, 0.3)"
-          }}
-          transition={{
-            scale: { duration: 0.8, repeat: isSpeaking ? Infinity : 0 },
-            boxShadow: { duration: 0.3 }
-          }}
-        >
+             {/* Voice Output Button */}
+       {currentMessage && (
+         <motion.button
+           onClick={toggleSpeaking}
+           className="p-3 transition-all duration-300 flex items-center justify-center gap-2 text-white bg-transparent border-none shadow-none"
+           style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}
+           whileHover={{ scale: 1.05 }}
+           whileTap={{ scale: 0.95 }}
+           transition={{ duration: 0.3 }}
+         >
           {isSpeaking ? (
             <>
               <Pause className="w-5 h-5" />
